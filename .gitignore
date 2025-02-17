@@ -1,0 +1,60 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Terraform plan files
+*.tfplan
+
+# Terraform configuration files
+*.tfvars
+*.tfvars.json
+
+# Terraform lock files
+.terraform.lock.hcl
+
+# Terraform directory
+.terraform/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Java build output
+target/
+.classpath
+.project
+
+# Go dependencies
+vendor/
+*.test
+
+# Temporary files
+*.swp
+*.swo
+
+# Build artifacts
+dist/
+build/
+
+*.png
+*.jpg
