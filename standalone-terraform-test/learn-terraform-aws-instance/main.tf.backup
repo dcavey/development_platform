@@ -1,0 +1,87 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
+    }
+  }
+
+  required_version = ">= 1.2.0"
+}
+
+provider "aws" {
+  region = "eu-west-1"
+}
+
+resource "aws_security_group" "allow_dev_ports" {
+  name        = "allow_dev_ports"
+  description = "Allow inbound traffic for development"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "SSH access"
+  }
+
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Node.js default port"
+  }
+
+  ingress {
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Python/Flask default port"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "app_server" {
+  ami           = "ami-0e82046e2f06c0a68"  # Amazon Linux 2 AMI
+  instance_type = "t2.micro"
+  vpc_security_group_ids = [aws_security_group.allow_dev_ports.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              # Update system packages
+              sudo yum update -y
+
+              # Install development tools
+              sudo yum groupinstall "Development Tools" -y
+
+              # Install Python 3 and pip
+              sudo yum install python3 python3-pip -y
+
+              # Install Node.js and npm
+              sudo yum install -y nodejs npm
+
+              # Verify installations
+              python3 --version
+              node --version
+              npm --version
+              pip3 --version
+
+              # Install useful global npm packages
+              sudo npm install -g nodemon
+
+              # Create a welcome page
+              echo "Node.js and Python Development Server" > index.html
+              EOF
+
+  tags = {
+    Name = "NodePythonDevServer"
+  }
+}

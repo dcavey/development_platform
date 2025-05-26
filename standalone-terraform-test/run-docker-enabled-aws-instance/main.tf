@@ -93,49 +93,56 @@ resource "aws_instance" "app_server" {
 
               # Start Docker service
               sudo service docker start
-
-              # Enable Docker service
               sudo systemctl enable docker
-
-              # Add the default user to the docker group
               sudo usermod -aG docker ec2-user
 
-              # Create a script to run Docker containers
+              # Install Nginx
+              sudo amazon-linux-extras install nginx1 -y
+
+              # Configure Nginx for HTTPS
+              sudo bash -c 'cat <<EOF > /etc/nginx/nginx.conf
+events {}
+http {
+    server {
+        listen 443 ssl;
+        server_name your-domain.com;
+
+        ssl_certificate /etc/ssl/certs/your-cert.pem;
+        ssl_certificate_key /etc/ssl/private/your-key.pem;
+
+        location /app1 {
+            proxy_pass http://localhost:2001;
+        }
+
+        location /app2 {
+            proxy_pass http://localhost:2002;
+        }
+
+        location /app3 {
+            proxy_pass http://localhost:2003;
+        }
+    }
+}
+EOF'
+
+              # Start Nginx
+              sudo systemctl start nginx
+              sudo systemctl enable nginx
+
+              # Pull and run Docker containers
               sudo bash -c 'cat <<EOF > /usr/local/bin/start-docker-containers.sh
 #!/bin/bash
-/usr/bin/docker pull cavengi/electronics-retail-app:latest
-/usr/bin/docker pull cavengi/angular-square-drawer:latest
+#/usr/bin/docker pull cavengi/electronics-retail-app:latest
+#/usr/bin/docker pull cavengi/angular-square-drawer:latest
 /usr/bin/docker pull cavengi/react-square-drawer:latest
-/usr/bin/docker run -d -p 2001:80 cavengi/electronics-retail-app:latest
-/usr/bin/docker run -d -p 2002:80 cavengi/angular-square-drawer:latest
+/usr/bin/docker pull cavengi/myflaskapp:latest
+#/usr/bin/docker run -d -p 2001:80 cavengi/electronics-retail-app:latest
+#/usr/bin/docker run -d -p 2002:80 cavengi/angular-square-drawer:latest
 /usr/bin/docker run -d -p 2003:80 cavengi/react-square-drawer:latest
+/usr/bin/docker run -d -p 2004:5000 cavengi/myflaskapp:latest
 EOF'
               sudo chmod +x /usr/local/bin/start-docker-containers.sh
-
-              # Create systemd service for Docker containers
-              sudo bash -c 'cat <<EOF > /etc/systemd/system/docker-containers.service
-[Unit]
-Description=Run Docker Containers
-After=docker.service
-Requires=docker.service
-
-[Service]
-Restart=always
-ExecStart=/usr/local/bin/start-docker-containers.sh
-ExecStop=/usr/bin/docker stop \$(/usr/bin/docker ps -q)
-
-[Install]
-WantedBy=multi-user.target
-EOF'
-
-              # Reload systemd daemon
-              sudo systemctl daemon-reload
-
-              # Enable Docker containers service
-              sudo systemctl enable docker-containers.service
-
-              # Start Docker containers service
-              sudo systemctl start docker-containers.service
+              sudo /usr/local/bin/start-docker-containers.sh
               EOF
 
   tags = {   
