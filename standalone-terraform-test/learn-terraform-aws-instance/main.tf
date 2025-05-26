@@ -71,7 +71,7 @@ resource "aws_instance" "app_server" {
 
               sudo yum install -y nodejs
 
-              sudo yum install -y git
+              sudo yum install -y git  
 
               # Get the GitHub password (this is a secure string parameter)
               export DCAVEY_GITHUB_PASSWORD=$(aws ssm get-parameter --name "DCAVEY_GITHUB_PASSWORD" --with-decryption --region eu-west-1 --query "Parameter.Value" --output text)
