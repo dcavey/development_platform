@@ -70,28 +70,26 @@ resource "aws_instance" "app_server" {
               sudo yum update -y
 
               sudo yum install -y nodejs
-
               sudo yum install -y git  
 
               # Get the GitHub password (this is a secure string parameter)
               export DCAVEY_GITHUB_PASSWORD=$(aws ssm get-parameter --name "DCAVEY_GITHUB_PASSWORD" --with-decryption --region eu-west-1 --query "Parameter.Value" --output text)
-            
-              # Get the OPENAI_API_KEY (this is a secure string parameter) 
               export OPENAI_API_KEY=$(aws ssm get-parameter --name "OPENAI_API_KEY" --with-decryption --region eu-west-1 --query "Parameter.Value" --output text)
-              
+
+              # Change to ec2-user's home directory
+              cd /home/ec2-user
+
               # Get the repo
-              # git clone https://$GITHUB_USER:$GITHUB_PASSWORD@github.com/$GITHUB_USER/my-openai-mockup-test.git
               git clone https://dcavey:$DCAVEY_GITHUB_PASSWORD@github.com/dcavey/my-openai-mockup-test.git
 
-              cd my_openai-mockup-test
+              cd my-openai-mockup-test
 
               # install the required nodejs packages
               sudo npm install express
 
               # Start the node server
               node mock_openai.js
-
-              EOF
+EOF
 
   tags = {
     Name = "mock-openAI-server"
