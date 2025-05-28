@@ -88,7 +88,7 @@ resource "aws_instance" "app_server" {
               sudo npm install express
 
               # Start the node server
-              node mock_openai.js
+              node mock_openai.js > /home/ec2-user/mock_openai.log 2>&1
 EOF
 
   tags = {
